@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sistema de Financiamentos</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Sistema completo para gestão de financiamentos, consultores e acessos">
+    <meta name="keywords" content="financiamentos, crefisa, consultores, gestão">
+    <meta name="author" content="Fabíola Albuquerque Pereira">
+    <meta name="theme-color" content="#1E40AF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Financiamentos">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#1E40AF">
+    <meta name="msapplication-config" content="none">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="moeda_192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="moeda_192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="moeda_192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="moeda_192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="moeda_192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="moeda_192.png">
+    <link rel="shortcut icon" href="moeda_192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Responsividade PWA */
+        @media (max-width: 768px) {
+            .mobile-stack {
+                flex-direction: column;
+            }
+            .mobile-w-full {
+                width: 100% !important;
+            }
+            .container {
+                margin: 1rem auto;
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem !important;
+            }
+            .tab-btn {
+                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+            }
+        }
+        
+        /* PWA Specific Styles */
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+        }
+        
+        /* iOS Safari specific */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-user-select: none;
+                -webkit-touch-callout: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+        
+        /* Install prompt styles */
+        .install-prompt {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1E40AF, #3B82F6);
+            color: white;
+            padding: 1rem;
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .install-prompt.show {
+            transform: translateY(0);
+        }
+        
+        .install-prompt-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .install-prompt-text {
+            flex: 1;
+        }
+        
+        .install-prompt-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .install-btn {
+            background: white;
+            color: #1E40AF;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .install-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+        
+        .dismiss-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .dismiss-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Loading indicator */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading.hidden {
+            display: none;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1E40AF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .input-error {
+            border-color: #f87171;
+        }
+        .error-message {
+            color: #f87171;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        body {
+            background-image: url('https://images.unsplash.com/photo-1601597111158-2fceff292cdc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 2rem auto;
+            padding: 2rem;
+            max-width: 1200px;
+        }
+        .bg-financial {
+            background-color: rgba(41, 128, 185, 0.9);
+        }
+        .bg-financial-light {
+            background-color: rgba(52, 152, 219, 0.9);
+        }
+        .total-row-table { /* Estilo para total DENTRO da tabela */
+            background-color: #f0f9ff;
+            font-weight: bold;
+            color: #1E40AF; /* Azul escuro (Tailwind blue-800) */
+        }
+        .total-display-separate { /* Estilo para total ABAIXO da tabela */
+            margin-top: 1rem;
+            text-align: right;
+        }
+        .total-display-separate .label {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: bold;
+            color: #1E40AF;
+        }
+        .total-display-separate .value {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: bold;
+            color: #1E40AF;
+        }
+        button {
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Install Prompt -->
+    <div id="installPrompt" class="install-prompt">
+        <div class="install-prompt-content">
+            <div class="install-prompt-text">
+                <h3 class="font-semibold">Instalar App</h3>
+                <p class="text-sm opacity-90">Adicione este app à sua tela inicial para acesso rápido</p>
+            </div>
+            <div class="install-prompt-buttons">
+                <button id="installBtn" class="install-btn">
+                    <i class="fas fa-download mr-2"></i>Instalar
+                </button>
+                <button id="dismissBtn" class="dismiss-btn">Agora não</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-8">Sistema de Financiamentos</h1>
+
+        <div class="bg-financial-light rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-white">Filtrar por Período</h2>
+            <div class="flex mobile-stack gap-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-white mb-1">Data Inicial</label>
+                    <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-white mb-1">Data Final</label>
+                    <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button id="filterBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full mobile-w-full">
+                        <i class="fas fa-filter mr-2"></i>Filtrar
+                    </button>
+                    <button id="clearBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md w-full mobile-w-full">
+                        <i class="fas fa-broom mr-2"></i>Limpar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex border-b border-gray-200">
+                <button class="tab-btn py-2 px-4 font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 active" data-tab="financing">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Financiamentos
+                </button>
+                <button class="tab-btn py-2 px-4 font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600" data-tab="consultants">
+                    <i class="fas fa-user-tie mr-2"></i>Consultores
+                </button>
+                <button class="tab-btn py-2 px-4 font-medium text-gray-600 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600" data-tab="newAccess">
+                    <i class="fas fa-key mr-2"></i>Acessos novos
+                </button>
+            </div>
+        </div>
+
+        <div id="financing" class="tab-content active">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Cadastrar Novo Financiamento</h2>
+                <form id="financingForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Data*</label>
+                            <input type="date" id="date" name="date" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="date-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="consultant" class="block text-sm font-medium text-gray-700 mb-1">Consultor*</label>
+                            <input type="text" id="consultant" name="consultant" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="consultant-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="clientName" class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente*</label>
+                            <input type="text" id="clientName" name="clientName" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="clientName-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="cpf" class="block text-sm font-medium text-gray-700 mb-1">CPF*</label>
+                            <input type="text" id="cpf" name="cpf" required class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                            <div id="cpf-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="value" class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)*</label>
+                            <input type="number" id="value" name="value" step="0.01" min="0" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="value-error" class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="reset" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md">
+                            <i class="fas fa-save mr-2"></i>Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Lista de Financiamentos</h2>
+                    <div class="flex gap-2">
+                        <button id="exportFinancingBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                        </button>
+                        <button id="clearDataBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-trash-alt mr-2"></i>Limpar Dados
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-financial">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Data</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Cliente</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">CPF</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Valor (R$)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Consultor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financingList" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                        <tfoot>
+                            <tr class="total-row-table">
+                                <td colspan="3" class="px-6 py-4 text-right">Total na Tabela:</td>
+                                <td id="totalFinancingValueInTable" class="px-6 py-4">R$ 0,00</td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="total-display-separate">
+                    <span class="label">Valor Total dos Financiamentos: </span>
+                    <span id="totalFinancingValueSeparate" class="value">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="consultants" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Relatório de Consultores</h2>
+                    <button id="exportConsultantsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-financial">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Consultor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Quantidade</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consultantsList" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                        <tfoot>
+                            <tr class="total-row-table">
+                                <td class="px-6 py-4 text-right">Total Geral na Tabela:</td>
+                                <td id="totalConsultantsCountInTable" class="px-6 py-4">0</td>
+                                <td id="totalConsultantsValueInTable" class="px-6 py-4">R$ 0,00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="total-display-separate">
+                    <div>
+                        <span class="label">Valor Total dos Consultores: </span>
+                        <span id="totalConsultantsValueSeparate" class="value">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <span class="label">Quantidade Total de Vendas: </span>
+                        <span id="totalConsultantsCountSeparate" class="value">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="newAccess" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Cadastrar Novo Acesso</h2>
+                <form id="accessForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="accessName" class="block text-sm font-medium text-gray-700 mb-1">Nome*</label>
+                            <input type="text" id="accessName" name="accessName" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="accessName-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="accessCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF*</label>
+                            <input type="text" id="accessCpf" name="accessCpf" required class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                            <div id="accessCpf-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="accessBirthdate" class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento*</label>
+                            <input type="date" id="accessBirthdate" name="accessBirthdate" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="accessBirthdate-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="accessEmail" class="block text-sm font-medium text-gray-700 mb-1">Email*</label>
+                            <input type="email" id="accessEmail" name="accessEmail" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <div id="accessEmail-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="accessPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefone*</label>
+                            <input type="text" id="accessPhone" name="accessPhone" required class="w-full p-2 border border-gray-300 rounded-md" placeholder="(00) 00000-0000">
+                            <div id="accessPhone-error" class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="reset" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md">
+                            <i class="fas fa-save mr-2"></i>Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Lista de Acessos</h2>
+                    <div class="flex gap-2">
+                        <button id="exportAccessBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
+                        </button>
+                        <button id="clearAccessDataBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-trash-alt mr-2"></i>Limpar Dados
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-financial">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nome</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">CPF</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Data de Nascimento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Telefone</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accessList" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Editar Financiamento</h3>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm" class="space-y-4">
+                <input type="hidden" id="editId">
+                <div>
+                    <label for="editDate" class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                    <input type="date" id="editDate" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editConsultant" class="block text-sm font-medium text-gray-700 mb-1">Consultor</label>
+                    <input type="text" id="editConsultant" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editClientName" class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
+                    <input type="text" id="editClientName" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                    <input type="text" id="editCpf" class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                </div>
+                <div>
+                    <label for="editValue" class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                    <input type="number" id="editValue" step="0.01" min="0" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="cancelEditBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="editAccessModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Editar Acesso</h3>
+                <button id="closeAccessModalBtn" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editAccessForm" class="space-y-4">
+                <input type="hidden" id="editAccessId">
+                <div>
+                    <label for="editAccessName" class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                    <input type="text" id="editAccessName" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editAccessCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                    <input type="text" id="editAccessCpf" class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                </div>
+                <div>
+                    <label for="editAccessBirthdate" class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                    <input type="date" id="editAccessBirthdate" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editAccessEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="editAccessEmail" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="editAccessPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    <input type="text" id="editAccessPhone" class="w-full p-2 border border-gray-300 rounded-md" placeholder="(00) 00000-0000">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="cancelAccessEditBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let financings = JSON.parse(localStorage.getItem('financings')) || [];
+        let accesses = JSON.parse(localStorage.getItem('accesses')) || [];
+
+        // DOM Elements
+        const financingForm = document.getElementById('financingForm');
+        const financingList = document.getElementById('financingList');
+        const consultantsList = document.getElementById('consultantsList');
+        const filterBtn = document.getElementById('filterBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const exportFinancingBtn = document.getElementById('exportFinancingBtn');
+        const exportConsultantsBtn = document.getElementById('exportConsultantsBtn');
+        const accessForm = document.getElementById('accessForm');
+        const accessList = document.getElementById('accessList');
+        const exportAccessBtn = document.getElementById('exportAccessBtn');
+        const clearAccessDataBtn = document.getElementById('clearAccessDataBtn');
+        const editAccessModal = document.getElementById('editAccessModal');
+        const editAccessForm = document.getElementById('editAccessForm');
+        const closeAccessModalBtn = document.getElementById('closeAccessModalBtn');
+        const cancelAccessEditBtn = document.getElementById('cancelAccessEditBtn');
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Totals in Table
+        const totalFinancingValueInTable = document.getElementById('totalFinancingValueInTable');
+        const totalConsultantsCountInTable = document.getElementById('totalConsultantsCountInTable');
+        const totalConsultantsValueInTable = document.getElementById('totalConsultantsValueInTable');
+
+        // Totals Separate Display
+        const totalFinancingValueSeparate = document.getElementById('totalFinancingValueSeparate');
+        const totalConsultantsCountSeparate = document.getElementById('totalConsultantsCountSeparate');
+        const totalConsultantsValueSeparate = document.getElementById('totalConsultantsValueSeparate');
+
+        // Set default dates
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        startDateInput.valueAsDate = firstDayOfMonth;
+        endDateInput.valueAsDate = lastDayOfMonth;
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatCPF(cpf) {
+            if (!cpf) return '';
+            cpf = cpf.replace(/\D/g, '');
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+
+        function validateCPF(cpf) {
+            cpf = cpf.replace(/\D/g, '');
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let sum = 0;
+            for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
+            let remainder = (sum * 10) % 11;
+            if (remainder === 10) remainder = 0;
+            if (remainder !== parseInt(cpf.charAt(9))) return false;
+            sum = 0;
+            for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
+            remainder = (sum * 10) % 11;
+            if (remainder === 10) remainder = 0;
+            return remainder === parseInt(cpf.charAt(10));
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+
+        function calculateFinancingTotal(filteredFinancings = financings) {
+            return filteredFinancings.reduce((total, financing) => total + parseFloat(financing.value || 0), 0);
+        }
+
+        function updateFinancingTotal(filteredFinancings = financings) {
+            const total = calculateFinancingTotal(filteredFinancings);
+            const formattedTotal = formatCurrency(total);
+            totalFinancingValueInTable.textContent = formattedTotal;
+            totalFinancingValueSeparate.textContent = formattedTotal;
+        }
+
+        function updateConsultantsTotal() {
+            const consultantsMap = {};
+            financings.forEach(financing => {
+                if (!consultantsMap[financing.consultant]) {
+                    consultantsMap[financing.consultant] = { count: 0, total: 0 };
+                }
+                consultantsMap[financing.consultant].count++;
+                consultantsMap[financing.consultant].total += parseFloat(financing.value);
+            });
+
+            const consultants = Object.values(consultantsMap); // Simplified
+            const totalCount = consultants.reduce((sum, c) => sum + c.count, 0);
+            const totalValue = consultants.reduce((sum, c) => sum + c.total, 0);
+
+            totalConsultantsCountInTable.textContent = totalCount;
+            totalConsultantsValueInTable.textContent = formatCurrency(totalValue);
+            totalConsultantsCountSeparate.textContent = totalCount;
+            totalConsultantsValueSeparate.textContent = formatCurrency(totalValue);
+        }
+
+        function renderFinancingList(filteredFinancings = financings) {
+            financingList.innerHTML = '';
+            if (filteredFinancings.length === 0) {
+                financingList.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Nenhum financiamento encontrado</td></tr>`;
+                updateFinancingTotal([]);
+                renderConsultantsList(); // Ensure consultant list is also updated
+                return;
+            }
+
+            filteredFinancings.forEach((financing, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatDate(financing.date)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${financing.clientName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCPF(financing.cpf)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(parseFloat(financing.value))}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${financing.consultant}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <button class="edit-btn text-blue-600 hover:text-blue-800 mr-3" data-id="${financing.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-btn text-red-600 hover:text-red-800" data-id="${financing.id}"><i class="fas fa-trash-alt"></i></button>
+                    </td>`;
+                financingList.appendChild(tr);
+            });
+
+            updateFinancingTotal(filteredFinancings);
+
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => openEditModal(e.currentTarget.getAttribute('data-id'))));
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => deleteFinancing(e.currentTarget.getAttribute('data-id'))));
+
+            renderConsultantsList();
+        }
+
+        function renderConsultantsList() {
+            consultantsList.innerHTML = '';
+            const consultantsMap = {};
+            financings.forEach(financing => {
+                if (!consultantsMap[financing.consultant]) {
+                    consultantsMap[financing.consultant] = { count: 0, total: 0 };
+                }
+                consultantsMap[financing.consultant].count++;
+                consultantsMap[financing.consultant].total += parseFloat(financing.value);
+            });
+
+            const consultantsData = Object.entries(consultantsMap).map(([name, data]) => ({ name, ...data }));
+
+            if (consultantsData.length === 0) {
+                consultantsList.innerHTML = `<tr><td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhum consultor encontrado</td></tr>`;
+                updateConsultantsTotal(); // Update with empty data
+                return;
+            }
+
+            consultantsData.forEach((consultant, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${consultant.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${consultant.count}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCurrency(consultant.total)}</td>`;
+                consultantsList.appendChild(tr);
+            });
+            updateConsultantsTotal();
+        }
+
+        financingForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+            const date = document.getElementById('date').value;
+            const consultant = document.getElementById('consultant').value.trim();
+            const clientName = document.getElementById('clientName').value.trim();
+            const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+            const value = document.getElementById('value').value;
+            let isValid = true;
+
+            if (!date) { document.getElementById('date').classList.add('input-error'); document.getElementById('date-error').textContent = 'Data é obrigatória'; isValid = false; }
+            if (!consultant) { document.getElementById('consultant').classList.add('input-error'); document.getElementById('consultant-error').textContent = 'Consultor é obrigatório'; isValid = false; }
+            if (!clientName) { document.getElementById('clientName').classList.add('input-error'); document.getElementById('clientName-error').textContent = 'Nome do cliente é obrigatório'; isValid = false; }
+            if (!cpf) { document.getElementById('cpf').classList.add('input-error'); document.getElementById('cpf-error').textContent = 'CPF é obrigatório'; isValid = false; }
+            else if (!validateCPF(cpf)) { document.getElementById('cpf').classList.add('input-error'); document.getElementById('cpf-error').textContent = 'CPF inválido'; isValid = false; }
+            if (!value || parseFloat(value) <= 0) { document.getElementById('value').classList.add('input-error'); document.getElementById('value-error').textContent = 'Valor deve ser maior que zero'; isValid = false; }
+
+            if (!isValid) return;
+
+            financings.push({ id: Date.now().toString(), date, consultant, clientName, cpf, value: parseFloat(value).toFixed(2) });
+            localStorage.setItem('financings', JSON.stringify(financings));
+            financingForm.reset();
+            renderFinancingList();
+            alert('Financiamento cadastrado com sucesso!');
+        });
+
+        filterBtn.addEventListener('click', () => {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            if (!startDate || !endDate) { alert('Por favor, selecione ambas as datas'); return; }
+            if (startDate > endDate) { alert('Data inicial não pode ser maior que data final'); return; }
+            renderFinancingList(financings.filter(f => f.date >= startDate && f.date <= endDate));
+        });
+
+        clearBtn.addEventListener('click', () => {
+            startDateInput.valueAsDate = firstDayOfMonth;
+            endDateInput.valueAsDate = lastDayOfMonth;
+            renderFinancingList();
+        });
+
+        clearDataBtn.addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.')) {
+                financings = [];
+                localStorage.removeItem('financings');
+                renderFinancingList();
+                alert('Todos os dados foram removidos com sucesso!');
+            }
+        });
+
+        function openEditModal(id) {
+            const financing = financings.find(f => f.id === id);
+            if (!financing) return;
+            document.getElementById('editId').value = financing.id;
+            document.getElementById('editDate').value = financing.date;
+            document.getElementById('editConsultant').value = financing.consultant;
+            document.getElementById('editClientName').value = financing.clientName;
+            document.getElementById('editCpf').value = financing.cpf; // Already formatted from input, or raw if direct from old data
+            document.getElementById('editValue').value = financing.value;
+            editModal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+        }
+
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const date = document.getElementById('editDate').value;
+            const consultant = document.getElementById('editConsultant').value.trim();
+            const clientName = document.getElementById('editClientName').value.trim();
+            const cpf = document.getElementById('editCpf').value.replace(/\D/g, '');
+            const value = document.getElementById('editValue').value;
+
+            if (!date || !consultant || !clientName || !cpf || !value || parseFloat(value) <= 0) { alert('Por favor, preencha todos os campos corretamente'); return; }
+            if (!validateCPF(cpf)) { alert('CPF inválido'); return; }
+
+            const index = financings.findIndex(f => f.id === id);
+            if (index !== -1) {
+                financings[index] = { ...financings[index], date, consultant, clientName, cpf, value: parseFloat(value).toFixed(2) };
+                localStorage.setItem('financings', JSON.stringify(financings));
+                renderFinancingList();
+                closeEditModal();
+                alert('Financiamento atualizado com sucesso!');
+            }
+        });
+
+        function deleteFinancing(id) {
+            if (confirm('Tem certeza que deseja excluir este financiamento?')) {
+                financings = financings.filter(f => f.id !== id);
+                localStorage.setItem('financings', JSON.stringify(financings));
+                renderFinancingList();
+                alert('Financiamento excluído com sucesso!');
+            }
+        }
+
+        exportFinancingBtn.addEventListener('click', () => {
+            try {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                let filteredFinancings = financings;
+                if (startDate && endDate) {
+                    filteredFinancings = financings.filter(f => f.date >= startDate && f.date <= endDate);
+                }
+                if (filteredFinancings.length === 0) { alert('Nenhum financiamento encontrado para exportar'); return; }
+
+                if (typeof window.jspdf !== 'undefined') {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'pt');
+
+                    doc.setFontSize(18);
+                    doc.text('Relatório de Financiamentos', 40, 40);
+                    doc.setFontSize(12);
+                    doc.text(`Período: ${formatDate(startDate) || 'Todos'} até ${formatDate(endDate) || 'Todos'}`, 40, 60);
+
+                    const tableData = filteredFinancings.map(f => [
+                        formatDate(f.date), f.clientName, formatCPF(f.cpf), formatCurrency(parseFloat(f.value))
+                    ]);
+                    const totalFinancingAmount = calculateFinancingTotal(filteredFinancings);
+
+                    // Total row IN TABLE (normal font size)
+                    tableData.push([
+                        { content: '', styles: { cellWidth: 'auto'} },
+                        { content: '', styles: { cellWidth: 'auto'} },
+                        { content: 'Total na Tabela:', styles: { halign: 'right', fontStyle: 'bold', textColor: [30, 64, 175]} },
+                        { content: formatCurrency(totalFinancingAmount), styles: { halign: 'left', fontStyle: 'bold', textColor: [30, 64, 175]} }
+                    ]);
+
+                    const headers = ['Data', 'Cliente', 'CPF', 'Valor (R$)'];
+
+                    doc.autoTable({
+                        head: [headers],
+                        body: tableData,
+                        startY: 80,
+                        margin: { top: 60 },
+                        styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
+                        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+                        columnStyles: {
+                            0: { cellWidth: 80 },
+                            1: { cellWidth: 250 },
+                            2: { cellWidth: 80 },
+                            3: { cellWidth: 100 }
+                        },
+                        didDrawPage: function (data) {
+                            // Configuração do rodapé
+                            doc.setFontSize(10); 
+                            doc.setTextColor(128, 128, 128); // Cor cinza
+                            
+                            // Data e hora atual formatada
+                            const now = new Date();
+                            const dataHora = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+                            
+                            // Texto do rodapé com nome, data/hora e número da página
+                            const pageNumber = doc.internal.getNumberOfPages();
+                            doc.text('Fabíola Albuquerque Pereira - Consultora', data.settings.margin.left, doc.internal.pageSize.height - 20);
+                            doc.text('Gerado em: ' + dataHora, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                            doc.text('Página ' + pageNumber, doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 10);
+                        }
+                    });
+
+                    // Total SEPARATE (larger font)
+                    const finalY = doc.lastAutoTable.finalY || 80;
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 64, 175); // Azul escuro
+                    doc.setFont(undefined, 'bold'); // Usar 'undefined' para manter a fonte atual (helvetica por padrão no jsPDF)
+                    doc.text('Valor Total dos Financiamentos:', 40, finalY + 30);
+                    doc.setFontSize(14);
+                    doc.text(formatCurrency(totalFinancingAmount), 240, finalY + 30);
+                    doc.setFont(undefined, 'normal');
+
+                    doc.save(`relatorio_financiamentos_${new Date().toISOString().slice(0, 10)}.pdf`);
+                } else {
+                    alert('Erro: Biblioteca de PDF não carregada.');
+                }
+            } catch (error) {
+                console.error('Erro PDF Financiamentos:', error);
+                alert('Erro ao gerar PDF de financiamentos.');
+            }
+        });
+
+        exportConsultantsBtn.addEventListener('click', () => {
+            try {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+                const consultantsMap = {};
+                let currentFinancings = financings;
+                if (startDate && endDate) {
+                    currentFinancings = financings.filter(f => f.date >= startDate && f.date <= endDate);
+                }
+
+                currentFinancings.forEach(f => {
+                    if (!consultantsMap[f.consultant]) consultantsMap[f.consultant] = { count: 0, total: 0 };
+                    consultantsMap[f.consultant].count++;
+                    consultantsMap[f.consultant].total += parseFloat(f.value);
+                });
+
+                const consultantsReportData = Object.entries(consultantsMap).map(([name, data]) => ({ name, ...data }));
+                if (consultantsReportData.length === 0) { alert('Nenhum consultor encontrado para exportar'); return; }
+
+                if (typeof window.jspdf !== 'undefined') {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'pt');
+
+                    doc.setFontSize(18); doc.text('Relatório de Consultores', 40, 40);
+                    doc.setFontSize(12); doc.text(`Período: ${formatDate(startDate) || 'Todos'} até ${formatDate(endDate) || 'Todos'}`, 40, 60);
+
+                    const tableData = consultantsReportData.map(c => [c.name, c.count, formatCurrency(c.total)]);
+                    const totalConsultantsCount = consultantsReportData.reduce((sum, c) => sum + c.count, 0);
+                    const totalConsultantsValue = consultantsReportData.reduce((sum, c) => sum + c.total, 0);
+
+                    // Total row IN TABLE
+                    tableData.push([
+                        { content: 'Total Geral na Tabela:', styles: { halign: 'left', fontStyle: 'bold', textColor: [30, 64, 175]} },
+                        { content: totalConsultantsCount, styles: { halign: 'left', fontStyle: 'bold', textColor: [30, 64, 175]} },
+                        { content: formatCurrency(totalConsultantsValue), styles: { halign: 'left', fontStyle: 'bold', textColor: [30, 64, 175]} }
+                    ]);
+
+                    const headers = ['Consultor', 'Quantidade', 'Total (R$)'];
+                    doc.autoTable({
+                        head: [headers], body: tableData, startY: 80, margin: { top: 60 },
+                        styles: { fontSize: 10, cellPadding: 3, valign: 'middle' },
+                        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+                        columnStyles: { 0: { cellWidth: 250 }, 1: { cellWidth: 60 }, 2: { cellWidth: 80 } },
+                        didDrawPage: function (data) {
+                            // Configuração do rodapé
+                            doc.setFontSize(10); 
+                            doc.setTextColor(128, 128, 128); // Cor cinza
+                            
+                            // Data e hora atual formatada
+                            const now = new Date();
+                            const dataHora = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+                            
+                            // Texto do rodapé com nome, data/hora e número da página
+                            const pageNumber = doc.internal.getNumberOfPages();
+                            doc.text('Fabíola Albuquerque Pereira - Consultora', data.settings.margin.left, doc.internal.pageSize.height - 20);
+                            doc.text('Gerado em: ' + dataHora, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                            doc.text('Página ' + pageNumber, doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 10);
+                        }
+                    });
+
+                    // Totals SEPARATE
+                    const finalYConsultants = doc.lastAutoTable.finalY || 80;
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 64, 175);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Valor Total dos Consultores:', 40, finalYConsultants + 30);
+                    doc.setFontSize(14);
+                    doc.text(formatCurrency(totalConsultantsValue), 240, finalYConsultants + 30);
+
+                    doc.setFontSize(12);
+                    doc.text('Quantidade Total de Vendas:', 40, finalYConsultants + 50);
+                    doc.setFontSize(14);
+                    doc.text(String(totalConsultantsCount), 240, finalYConsultants + 50);
+                    doc.setFont(undefined, 'normal');
+
+                    doc.save(`relatorio_consultores_${new Date().toISOString().slice(0, 10)}.pdf`);
+                } else {
+                    alert('Erro: Biblioteca de PDF não carregada.');
+                }
+            } catch (error) {
+                console.error('Erro PDF Consultores:', error);
+                alert('Erro ao gerar PDF de consultores.');
+            }
+        });
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                tabButtons.forEach(btn => { btn.classList.remove('active', 'border-blue-600'); btn.classList.add('border-transparent'); });
+                button.classList.add('active', 'border-blue-600'); button.classList.remove('border-transparent');
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        closeModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 3) value = value.replace(/^(\d{3})/, '$1.');
+            if (value.length > 7) value = value.replace(/^(\d{3})\.(\d{3})/, '$1.$2.');
+            if (value.length > 11) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 14);
+        });
+         document.getElementById('editCpf').addEventListener('input', function(e) { // Adicionado para o modal de edição
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 3) value = value.replace(/^(\d{3})/, '$1.');
+            if (value.length > 7) value = value.replace(/^(\d{3})\.(\d{3})/, '$1.$2.');
+            if (value.length > 11) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 14);
+        });
+        
+        // Formatação de CPF para a aba de Acessos
+        document.getElementById('accessCpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 3) value = value.replace(/^(\d{3})/, '$1.');
+            if (value.length > 7) value = value.replace(/^(\d{3})\.(\d{3})/, '$1.$2.');
+            if (value.length > 11) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 14);
+        });
+        
+        document.getElementById('editAccessCpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 3) value = value.replace(/^(\d{3})/, '$1.');
+            if (value.length > 7) value = value.replace(/^(\d{3})\.(\d{3})/, '$1.$2.');
+            if (value.length > 11) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 14);
+        });
+        
+        // Formatação de telefone
+        document.getElementById('accessPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) value = value.replace(/^(\d{2})/, '($1) ');
+            if (value.length > 7) value = value.replace(/^\((\d{2})\) (\d{5})/, '($1) $2-');
+            e.target.value = value.substring(0, 15);
+        });
+        
+        document.getElementById('editAccessPhone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) value = value.replace(/^(\d{2})/, '($1) ');
+            if (value.length > 7) value = value.replace(/^\((\d{2})\) (\d{5})/, '($1) $2-');
+            e.target.value = value.substring(0, 15);
+        });
+
+        renderFinancingList();
+        
+        // Funções para a aba de Acessos novos
+        function formatBirthdate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+        
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function validatePhone(phone) {
+            phone = phone.replace(/\D/g, '');
+            return phone.length >= 10; // Pelo menos 10 dígitos (DDD + número)
+        }
+        
+        function renderAccessList() {
+            accessList.innerHTML = '';
+            if (accesses.length === 0) {
+                accessList.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Nenhum acesso encontrado</td></tr>`;
+                return;
+            }
+            
+            accesses.forEach((access, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCPF(access.cpf)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatBirthdate(access.birthdate)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <button class="edit-access-btn text-blue-600 hover:text-blue-800 mr-3" data-id="${access.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-access-btn text-red-600 hover:text-red-800" data-id="${access.id}"><i class="fas fa-trash-alt"></i></button>
+                    </td>`;
+                accessList.appendChild(tr);
+            });
+            
+            document.querySelectorAll('.edit-access-btn').forEach(btn => btn.addEventListener('click', (e) => openEditAccessModal(e.currentTarget.getAttribute('data-id'))));
+            document.querySelectorAll('.delete-access-btn').forEach(btn => btn.addEventListener('click', (e) => deleteAccess(e.currentTarget.getAttribute('data-id'))));
+        }
+        
+        accessForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            
+            const name = document.getElementById('accessName').value.trim();
+            const cpf = document.getElementById('accessCpf').value.replace(/\D/g, '');
+            const birthdate = document.getElementById('accessBirthdate').value;
+            const email = document.getElementById('accessEmail').value.trim();
+            const phone = document.getElementById('accessPhone').value.trim();
+            let isValid = true;
+            
+            if (!name) { document.getElementById('accessName').classList.add('input-error'); document.getElementById('accessName-error').textContent = 'Nome é obrigatório'; isValid = false; }
+            if (!cpf) { document.getElementById('accessCpf').classList.add('input-error'); document.getElementById('accessCpf-error').textContent = 'CPF é obrigatório'; isValid = false; }
+            else if (!validateCPF(cpf)) { document.getElementById('accessCpf').classList.add('input-error'); document.getElementById('accessCpf-error').textContent = 'CPF inválido'; isValid = false; }
+            if (!birthdate) { document.getElementById('accessBirthdate').classList.add('input-error'); document.getElementById('accessBirthdate-error').textContent = 'Data de nascimento é obrigatória'; isValid = false; }
+            if (!email) { document.getElementById('accessEmail').classList.add('input-error'); document.getElementById('accessEmail-error').textContent = 'Email é obrigatório'; isValid = false; }
+            else if (!validateEmail(email)) { document.getElementById('accessEmail').classList.add('input-error'); document.getElementById('accessEmail-error').textContent = 'Email inválido'; isValid = false; }
+            if (!phone) { document.getElementById('accessPhone').classList.add('input-error'); document.getElementById('accessPhone-error').textContent = 'Telefone é obrigatório'; isValid = false; }
+            else if (!validatePhone(phone)) { document.getElementById('accessPhone').classList.add('input-error'); document.getElementById('accessPhone-error').textContent = 'Telefone inválido'; isValid = false; }
+            
+            if (!isValid) return;
+            
+            accesses.push({ id: Date.now().toString(), name, cpf, birthdate, email, phone });
+            localStorage.setItem('accesses', JSON.stringify(accesses));
+            accessForm.reset();
+            renderAccessList();
+            alert('Acesso cadastrado com sucesso!');
+        });
+        
+        function openEditAccessModal(id) {
+            const access = accesses.find(a => a.id === id);
+            if (!access) return;
+            document.getElementById('editAccessId').value = access.id;
+            document.getElementById('editAccessName').value = access.name;
+            document.getElementById('editAccessCpf').value = formatCPF(access.cpf);
+            document.getElementById('editAccessBirthdate').value = access.birthdate;
+            document.getElementById('editAccessEmail').value = access.email;
+            document.getElementById('editAccessPhone').value = access.phone;
+            editAccessModal.classList.remove('hidden');
+        }
+        
+        function closeEditAccessModal() {
+            editAccessModal.classList.add('hidden');
+        }
+        
+        editAccessForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editAccessId').value;
+            const name = document.getElementById('editAccessName').value.trim();
+            const cpf = document.getElementById('editAccessCpf').value.replace(/\D/g, '');
+            const birthdate = document.getElementById('editAccessBirthdate').value;
+            const email = document.getElementById('editAccessEmail').value.trim();
+            const phone = document.getElementById('editAccessPhone').value.trim();
+            
+            if (!name || !cpf || !birthdate || !email || !phone) { alert('Por favor, preencha todos os campos corretamente'); return; }
+            if (!validateCPF(cpf)) { alert('CPF inválido'); return; }
+            if (!validateEmail(email)) { alert('Email inválido'); return; }
+            if (!validatePhone(phone)) { alert('Telefone inválido'); return; }
+            
+            const index = accesses.findIndex(a => a.id === id);
+            if (index !== -1) {
+                accesses[index] = { ...accesses[index], name, cpf, birthdate, email, phone };
+                localStorage.setItem('accesses', JSON.stringify(accesses));
+                renderAccessList();
+                closeEditAccessModal();
+                alert('Acesso atualizado com sucesso!');
+            }
+        });
+        
+        function deleteAccess(id) {
+            if (confirm('Tem certeza que deseja excluir este acesso?')) {
+                accesses = accesses.filter(a => a.id !== id);
+                localStorage.setItem('accesses', JSON.stringify(accesses));
+                renderAccessList();
+                alert('Acesso excluído com sucesso!');
+            }
+        }
+        
+        clearAccessDataBtn.addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar TODOS os dados de acessos? Esta ação não pode ser desfeita.')) {
+                accesses = [];
+                localStorage.removeItem('accesses');
+                renderAccessList();
+                alert('Todos os dados de acessos foram removidos com sucesso!');
+            }
+        });
+        
+        exportAccessBtn.addEventListener('click', () => {
+            try {
+                if (accesses.length === 0) { alert('Nenhum acesso encontrado para exportar'); return; }
+                
+                if (typeof window.jspdf !== 'undefined') {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'pt');
+                    
+                    doc.setFontSize(18);
+                    doc.text('Relatório de Acessos Novos', 40, 40);
+                    
+                    const tableData = accesses.map(a => [
+                        a.name, formatCPF(a.cpf), formatBirthdate(a.birthdate), a.email, a.phone
+                    ]);
+                    
+                    const headers = ['Nome', 'CPF', 'Data de Nascimento', 'Email', 'Telefone'];
+                    
+                    doc.autoTable({
+                        head: [headers],
+                        body: tableData,
+                        startY: 60,
+                        margin: { top: 60 },
+                        styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
+                        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+                        columnStyles: {
+                            0: { cellWidth: 120 },
+                            1: { cellWidth: 80 },
+                            2: { cellWidth: 80 },
+                            3: { cellWidth: 120 },
+                            4: { cellWidth: 80 }
+                        },
+                        didDrawPage: function (data) {
+                            // Configuração do rodapé
+                            doc.setFontSize(10); 
+                            doc.setTextColor(128, 128, 128); // Cor cinza
+                            
+                            // Data e hora atual formatada
+                            const now = new Date();
+                            const dataHora = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+                            
+                            // Texto do rodapé com nome, data/hora e número da página
+                            const pageNumber = doc.internal.getNumberOfPages();
+                            doc.text('Fabíola Albuquerque Pereira - Consultora', data.settings.margin.left, doc.internal.pageSize.height - 20);
+                            doc.text('Gerado em: ' + dataHora, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                            doc.text('Página ' + pageNumber, doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 10);
+                        }
+                    });
+                    
+                    doc.save(`relatorio_acessos_${new Date().toISOString().slice(0, 10)}.pdf`);
+                } else {
+                    alert('Erro: Biblioteca de PDF não carregada.');
+                }
+            } catch (error) {
+                console.error('Erro PDF Acessos:', error);
+                alert('Erro ao gerar PDF de acessos.');
+            }
+        });
+        
+        closeAccessModalBtn.addEventListener('click', closeEditAccessModal);
+        cancelAccessEditBtn.addEventListener('click', closeEditAccessModal);
+        
+        renderAccessList();
+        
+        // PWA Functionality
+        let deferredPrompt;
+        let installPromptShown = false;
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Falha no registro do Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Install Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Mostrar prompt após 3 segundos
+            setTimeout(() => {
+                if (!installPromptShown && !window.matchMedia('(display-mode: standalone)').matches) {
+                    showInstallPrompt();
+                }
+            }, 3000);
+        });
+        
+        function showInstallPrompt() {
+            const installPrompt = document.getElementById('installPrompt');
+            installPrompt.classList.add('show');
+            installPromptShown = true;
+        }
+        
+        function hideInstallPrompt() {
+            const installPrompt = document.getElementById('installPrompt');
+            installPrompt.classList.remove('show');
+        }
+        
+        // Install button click
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('Resultado da instalação:', outcome);
+                deferredPrompt = null;
+                hideInstallPrompt();
+            }
+        });
+        
+        // Dismiss button click
+        document.getElementById('dismissBtn').addEventListener('click', () => {
+            hideInstallPrompt();
+        });
+        
+        // Check if app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('App instalado com sucesso!');
+            hideInstallPrompt();
+        });
+        
+        // Loading management
+        window.addEventListener('load', () => {
+            const loading = document.getElementById('loading');
+            loading.classList.add('hidden');
+        });
+        
+        // Handle URL parameters for shortcuts
+        function handleURLParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            
+            if (tab) {
+                const tabButton = document.querySelector(`[data-tab="${tab}"]`);
+                if (tabButton) {
+                    tabButton.click();
+                }
+            }
+        }
+        
+        // Initialize PWA features
+        document.addEventListener('DOMContentLoaded', () => {
+            handleURLParams();
+            
+            // Add touch feedback for mobile
+            if ('ontouchstart' in window) {
+                document.querySelectorAll('button, input, select, textarea').forEach(element => {
+                    element.addEventListener('touchstart', function() {
+                        this.style.transform = 'scale(0.98)';
+                    });
+                    
+                    element.addEventListener('touchend', function() {
+                        this.style.transform = '';
+                    });
+                });
+            }
+        });
+        
+        // Offline/Online detection
+        window.addEventListener('online', () => {
+            console.log('Aplicação online');
+            showNotification('Conexão restaurada', 'Você está online novamente');
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('Aplicação offline');
+            showNotification('Modo offline', 'Algumas funcionalidades podem estar limitadas');
+        });
+        
+        function showNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/moeda_192.png'
+                });
+            }
+        }
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+    
+    <!-- Rodapé -->
+    <footer class="text-center py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <p class="text-sm text-gray-600">
+                Desenvolvido por <strong class="text-blue-800">Francisco José</strong>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

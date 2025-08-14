@@ -1,0 +1,86 @@
+{
+  "name": "Sistema de Financiamentos Crefisa",
+  "short_name": "Financiamentos",
+  "description": "Sistema completo para gestão de financiamentos, consultores e acessos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E40AF",
+  "theme_color": "#1E40AF",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "moeda_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "moeda_256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "moeda_384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "moeda_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "moeda_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela principal do sistema de financiamentos"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Novo Financiamento",
+      "short_name": "Financiamento",
+      "description": "Cadastrar novo financiamento",
+      "url": "/?tab=financing",
+      "icons": [
+        {
+          "src": "moeda_192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Relatório Consultores",
+      "short_name": "Consultores",
+      "description": "Visualizar relatório de consultores",
+      "url": "/?tab=consultants",
+      "icons": [
+        {
+          "src": "moeda_192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Novos Acessos",
+      "short_name": "Acessos",
+      "description": "Gerenciar novos acessos",
+      "url": "/?tab=newAccess",
+      "icons": [
+        {
+          "src": "moeda_192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
