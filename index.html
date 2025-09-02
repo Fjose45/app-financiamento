@@ -432,8 +432,8 @@
                             <div id="accessName-error" class="error-message"></div>
                         </div>
                         <div>
-                            <label for="accessCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF*</label>
-                            <input type="text" id="accessCpf" name="accessCpf" required class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                            <label for="accessCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                            <input type="text" id="accessCpf" name="accessCpf" class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
                             <div id="accessCpf-error" class="error-message"></div>
                         </div>
                         <div>
@@ -442,14 +442,19 @@
                             <div id="accessBirthdate-error" class="error-message"></div>
                         </div>
                         <div>
-                            <label for="accessEmail" class="block text-sm font-medium text-gray-700 mb-1">Email*</label>
-                            <input type="email" id="accessEmail" name="accessEmail" required class="w-full p-2 border border-gray-300 rounded-md">
+                            <label for="accessEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="accessEmail" name="accessEmail" class="w-full p-2 border border-gray-300 rounded-md">
                             <div id="accessEmail-error" class="error-message"></div>
                         </div>
                         <div>
                             <label for="accessPhone" class="block text-sm font-medium text-gray-700 mb-1">Telefone*</label>
                             <input type="text" id="accessPhone" name="accessPhone" required class="w-full p-2 border border-gray-300 rounded-md" placeholder="(00) 00000-0000">
                             <div id="accessPhone-error" class="error-message"></div>
+                        </div>
+                        <div>
+                            <label for="accessRg" class="block text-sm font-medium text-gray-700 mb-1">RG</label>
+                            <input type="text" id="accessRg" name="accessRg" class="w-full p-2 border border-gray-300 rounded-md" placeholder="00.000.000-0">
+                            <div id="accessRg-error" class="error-message"></div>
                         </div>
                     </div>
                     <div class="flex justify-end gap-2">
@@ -481,6 +486,7 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Nome</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">CPF</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">RG</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Data de Nascimento</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Email</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Telefone</th>
@@ -499,7 +505,7 @@
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Editar Financiamento</h3>
-                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700" title="Fechar modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -541,7 +547,7 @@
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Editar Acesso</h3>
-                <button id="closeAccessModalBtn" class="text-gray-500 hover:text-gray-700">
+                <button id="closeAccessModalBtn" class="text-gray-500 hover:text-gray-700" title="Fechar modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -554,6 +560,10 @@
                 <div>
                     <label for="editAccessCpf" class="block text-sm font-medium text-gray-700 mb-1">CPF</label>
                     <input type="text" id="editAccessCpf" class="w-full p-2 border border-gray-300 rounded-md" placeholder="000.000.000-00">
+                </div>
+                <div>
+                    <label for="editAccessRg" class="block text-sm font-medium text-gray-700 mb-1">RG</label>
+                    <input type="text" id="editAccessRg" class="w-full p-2 border border-gray-300 rounded-md" placeholder="00.000.000-0">
                 </div>
                 <div>
                     <label for="editAccessBirthdate" class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
@@ -640,6 +650,16 @@
             return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
         }
 
+        function formatRG(rg) {
+            if (!rg) return '';
+            rg = rg.replace(/\D/g, '');
+            if (rg.length <= 7) {
+                return rg.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+            } else {
+                return rg.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
+            }
+        }
+
         function validateCPF(cpf) {
             cpf = cpf.replace(/\D/g, '');
             if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -653,6 +673,11 @@
             remainder = (sum * 10) % 11;
             if (remainder === 10) remainder = 0;
             return remainder === parseInt(cpf.charAt(10));
+        }
+
+        function validateRG(rg) {
+            rg = rg.replace(/\D/g, '');
+            return rg.length >= 7 && rg.length <= 9; // RG pode ter de 7 a 9 dígitos
         }
 
         function formatCurrency(value) {
@@ -1080,6 +1105,23 @@
             if (value.length > 7) value = value.replace(/^\((\d{2})\) (\d{5})/, '($1) $2-');
             e.target.value = value.substring(0, 15);
         });
+        
+        // Formatação de RG
+        document.getElementById('accessRg').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) value = value.replace(/^(\d{2})/, '$1.');
+            if (value.length > 6) value = value.replace(/^(\d{2})\.(\d{3})/, '$1.$2.');
+            if (value.length > 9) value = value.replace(/^(\d{2})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 12);
+        });
+        
+        document.getElementById('editAccessRg').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) value = value.replace(/^(\d{2})/, '$1.');
+            if (value.length > 6) value = value.replace(/^(\d{2})\.(\d{3})/, '$1.$2.');
+            if (value.length > 9) value = value.replace(/^(\d{2})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
+            e.target.value = value.substring(0, 12);
+        });
 
         renderFinancingList();
         
@@ -1103,7 +1145,7 @@
         function renderAccessList() {
             accessList.innerHTML = '';
             if (accesses.length === 0) {
-                accessList.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Nenhum acesso encontrado</td></tr>`;
+                accessList.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Nenhum acesso encontrado</td></tr>`;
                 return;
             }
             
@@ -1112,9 +1154,10 @@
                 tr.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatCPF(access.cpf)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.cpf ? formatCPF(access.cpf) : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.rg ? formatRG(access.rg) : '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${formatBirthdate(access.birthdate)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.email || '-'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${access.phone}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <button class="edit-access-btn text-blue-600 hover:text-blue-800 mr-3" data-id="${access.id}"><i class="fas fa-edit"></i></button>
@@ -1134,23 +1177,23 @@
             
             const name = document.getElementById('accessName').value.trim();
             const cpf = document.getElementById('accessCpf').value.replace(/\D/g, '');
+            const rg = document.getElementById('accessRg').value.replace(/\D/g, '');
             const birthdate = document.getElementById('accessBirthdate').value;
             const email = document.getElementById('accessEmail').value.trim();
             const phone = document.getElementById('accessPhone').value.trim();
             let isValid = true;
             
             if (!name) { document.getElementById('accessName').classList.add('input-error'); document.getElementById('accessName-error').textContent = 'Nome é obrigatório'; isValid = false; }
-            if (!cpf) { document.getElementById('accessCpf').classList.add('input-error'); document.getElementById('accessCpf-error').textContent = 'CPF é obrigatório'; isValid = false; }
-            else if (!validateCPF(cpf)) { document.getElementById('accessCpf').classList.add('input-error'); document.getElementById('accessCpf-error').textContent = 'CPF inválido'; isValid = false; }
+            if (cpf && !validateCPF(cpf)) { document.getElementById('accessCpf').classList.add('input-error'); document.getElementById('accessCpf-error').textContent = 'CPF inválido'; isValid = false; }
+            if (rg && !validateRG(rg)) { document.getElementById('accessRg').classList.add('input-error'); document.getElementById('accessRg-error').textContent = 'RG inválido'; isValid = false; }
             if (!birthdate) { document.getElementById('accessBirthdate').classList.add('input-error'); document.getElementById('accessBirthdate-error').textContent = 'Data de nascimento é obrigatória'; isValid = false; }
-            if (!email) { document.getElementById('accessEmail').classList.add('input-error'); document.getElementById('accessEmail-error').textContent = 'Email é obrigatório'; isValid = false; }
-            else if (!validateEmail(email)) { document.getElementById('accessEmail').classList.add('input-error'); document.getElementById('accessEmail-error').textContent = 'Email inválido'; isValid = false; }
+            if (email && !validateEmail(email)) { document.getElementById('accessEmail').classList.add('input-error'); document.getElementById('accessEmail-error').textContent = 'Email inválido'; isValid = false; }
             if (!phone) { document.getElementById('accessPhone').classList.add('input-error'); document.getElementById('accessPhone-error').textContent = 'Telefone é obrigatório'; isValid = false; }
             else if (!validatePhone(phone)) { document.getElementById('accessPhone').classList.add('input-error'); document.getElementById('accessPhone-error').textContent = 'Telefone inválido'; isValid = false; }
             
             if (!isValid) return;
             
-            accesses.push({ id: Date.now().toString(), name, cpf, birthdate, email, phone });
+            accesses.push({ id: Date.now().toString(), name, cpf, rg, birthdate, email, phone });
             localStorage.setItem('accesses', JSON.stringify(accesses));
             accessForm.reset();
             renderAccessList();
@@ -1162,9 +1205,10 @@
             if (!access) return;
             document.getElementById('editAccessId').value = access.id;
             document.getElementById('editAccessName').value = access.name;
-            document.getElementById('editAccessCpf').value = formatCPF(access.cpf);
+            document.getElementById('editAccessCpf').value = access.cpf ? formatCPF(access.cpf) : '';
+            document.getElementById('editAccessRg').value = access.rg ? formatRG(access.rg) : '';
             document.getElementById('editAccessBirthdate').value = access.birthdate;
-            document.getElementById('editAccessEmail').value = access.email;
+            document.getElementById('editAccessEmail').value = access.email || '';
             document.getElementById('editAccessPhone').value = access.phone;
             editAccessModal.classList.remove('hidden');
         }
@@ -1178,18 +1222,20 @@
             const id = document.getElementById('editAccessId').value;
             const name = document.getElementById('editAccessName').value.trim();
             const cpf = document.getElementById('editAccessCpf').value.replace(/\D/g, '');
+            const rg = document.getElementById('editAccessRg').value.replace(/\D/g, '');
             const birthdate = document.getElementById('editAccessBirthdate').value;
             const email = document.getElementById('editAccessEmail').value.trim();
             const phone = document.getElementById('editAccessPhone').value.trim();
             
-            if (!name || !cpf || !birthdate || !email || !phone) { alert('Por favor, preencha todos os campos corretamente'); return; }
-            if (!validateCPF(cpf)) { alert('CPF inválido'); return; }
-            if (!validateEmail(email)) { alert('Email inválido'); return; }
+            if (!name || !birthdate || !phone) { alert('Por favor, preencha os campos obrigatórios (Nome, Data de Nascimento e Telefone)'); return; }
+            if (cpf && !validateCPF(cpf)) { alert('CPF inválido'); return; }
+            if (rg && !validateRG(rg)) { alert('RG inválido'); return; }
+            if (email && !validateEmail(email)) { alert('Email inválido'); return; }
             if (!validatePhone(phone)) { alert('Telefone inválido'); return; }
             
             const index = accesses.findIndex(a => a.id === id);
             if (index !== -1) {
-                accesses[index] = { ...accesses[index], name, cpf, birthdate, email, phone };
+                accesses[index] = { ...accesses[index], name, cpf, rg, birthdate, email, phone };
                 localStorage.setItem('accesses', JSON.stringify(accesses));
                 renderAccessList();
                 closeEditAccessModal();
@@ -1227,10 +1273,10 @@
                     doc.text('Relatório de Acessos Novos', 40, 40);
                     
                     const tableData = accesses.map(a => [
-                        a.name, formatCPF(a.cpf), formatBirthdate(a.birthdate), a.email, a.phone
+                        a.name, a.cpf ? formatCPF(a.cpf) : '-', a.rg ? formatRG(a.rg) : '-', formatBirthdate(a.birthdate), a.email || '-', a.phone
                     ]);
                     
-                    const headers = ['Nome', 'CPF', 'Data de Nascimento', 'Email', 'Telefone'];
+                    const headers = ['Nome', 'CPF', 'RG', 'Data de Nascimento', 'Email', 'Telefone'];
                     
                     doc.autoTable({
                         head: [headers],
@@ -1240,11 +1286,12 @@
                         styles: { fontSize: 9, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
                         headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
                         columnStyles: {
-                            0: { cellWidth: 120 },
-                            1: { cellWidth: 80 },
-                            2: { cellWidth: 80 },
-                            3: { cellWidth: 120 },
-                            4: { cellWidth: 80 }
+                            0: { cellWidth: 100 },
+                            1: { cellWidth: 70 },
+                            2: { cellWidth: 60 },
+                            3: { cellWidth: 70 },
+                            4: { cellWidth: 100 },
+                            5: { cellWidth: 70 }
                         },
                         didDrawPage: function (data) {
                             // Configuração do rodapé
