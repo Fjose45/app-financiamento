@@ -653,11 +653,8 @@
         function formatRG(rg) {
             if (!rg) return '';
             rg = rg.replace(/\D/g, '');
-            if (rg.length <= 7) {
-                return rg.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
-            } else {
-                return rg.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
-            }
+            // Formata com pontos a cada 3 dígitos, começando do final
+            return rg.replace(/(\d{3})(?=\d)/g, '$1.');
         }
 
         function validateCPF(cpf) {
@@ -677,7 +674,7 @@
 
         function validateRG(rg) {
             rg = rg.replace(/\D/g, '');
-            return rg.length >= 7 && rg.length <= 9; // RG pode ter de 7 a 9 dígitos
+            return rg.length >= 7; // RG pode ter 7 ou mais dígitos (sem limite máximo)
         }
 
         function formatCurrency(value) {
@@ -1109,18 +1106,16 @@
         // Formatação de RG
         document.getElementById('accessRg').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 2) value = value.replace(/^(\d{2})/, '$1.');
-            if (value.length > 6) value = value.replace(/^(\d{2})\.(\d{3})/, '$1.$2.');
-            if (value.length > 9) value = value.replace(/^(\d{2})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
-            e.target.value = value.substring(0, 12);
+            // Formata com pontos a cada 3 dígitos
+            value = value.replace(/(\d{3})(?=\d)/g, '$1.');
+            e.target.value = value;
         });
         
         document.getElementById('editAccessRg').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 2) value = value.replace(/^(\d{2})/, '$1.');
-            if (value.length > 6) value = value.replace(/^(\d{2})\.(\d{3})/, '$1.$2.');
-            if (value.length > 9) value = value.replace(/^(\d{2})\.(\d{3})\.(\d{3})/, '$1.$2.$3-');
-            e.target.value = value.substring(0, 12);
+            // Formata com pontos a cada 3 dígitos
+            value = value.replace(/(\d{3})(?=\d)/g, '$1.');
+            e.target.value = value;
         });
 
         renderFinancingList();
